@@ -33,7 +33,9 @@ app2 1920 1 B
 app2 1952 2 AB
 app1 1952 2 AB
 ```
-the bottom part of the result is | plugin name | mem offset | val
+the upper Object is the exports from the asr project that are imported into the others
+
+the bottom part of the result is "plugin name | mem offset | length | val"
 so both apps are operating on the same memory addresses
 
 ## Sub Projects
