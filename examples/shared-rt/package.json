@@ -1,0 +1,14 @@
+{
+    "scripts": {
+      "asr:untouched": "asc asr/assembly/index.ts -b asr/build/untouched.wasm -t asr/build/untouched.wat --sourceMap --validate --debug --runtime export",
+      "asr:optimized": "asc asr/assembly/index.ts -b asr/build/optimized.wasm -t asr/build/optimized.wat --sourceMap --validate --optimize",
+      "app1:untouched": "asc app1/assembly/index.ts -b app1/build/untouched.wasm -t app1/build/untouched.wat --sourceMap --validate --debug --runtime import --importMemory",
+      "app1:optimized": "asc app1/assembly/index.ts -b app1/build/optimized.wasm -t app1/build/optimized.wat --sourceMap --validate --optimize",
+      "app2:untouched": "asc app2/assembly/index.ts -b app2/build/untouched.wasm -t app2/build/untouched.wat --sourceMap --validate --debug --runtime import --importMemory",
+      "app2:optimized": "asc app2/assembly/index.ts -b app2/build/optimized.wasm -t app2/build/optimized.wat --sourceMap --validate --optimize",  
+      "asr": "npm run asr:untouched",
+      "app1": "npm run app1:untouched",
+      "app2": "npm run app2:untouched",      
+      "asbuild": "npm run asr && npm run app1 && npm run app2"
+    }
+  }
