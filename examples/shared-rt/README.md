@@ -14,6 +14,27 @@ and run the example with
 ```console
 node runner.js
 ```
+should give output similar to
+
+```console
+[Object: null prototype] {
+  memory: Memory [WebAssembly.Memory] {},
+  __alloc: [Function: 16],
+  __realloc: [Function: 20],
+  __free: [Function: 21],
+  __retain: [Function: 23],
+  __release: [Function: 28],
+  __collect: [Function: 12],
+  __visit: [Function: 29],
+  __rtti_base: 256 }
+ArrayBuffer { byteLength: 65536 }
+app1 1888 1 A
+app2 1920 1 B
+app2 1952 2 AB
+app1 1952 2 AB
+```
+the bottom part of the result is | plugin name | mem offset | val
+so both apps are operating on the same memory addresses
 
 ## Sub Projects
 
