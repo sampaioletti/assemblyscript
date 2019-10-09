@@ -32,13 +32,13 @@ export function concat(a:string,b:string,repeat:i32):string{
 build both modules with asc, the package.json has a helper script
 
 ```console
-...wrap-strings>npm run asbuild
+.../wrap-strings>npm run asbuild
 ```
 run the index.ts
 
 ```console
-...wrap-strings>ts-node index.ts
-...wrap-string>app1 abababababababababab
+.../wrap-strings>ts-node index.ts
+.../wrap-strings>app1 abababababababababab
 ```
 Requirements to work:
 
