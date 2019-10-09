@@ -1,8 +1,8 @@
 {
     "scripts": {
-      "asr": "asc asr/assembly/index.ts -b asr/build/untouched.wasm -t asr/build/untouched.wat --sourceMap --validate --debug --runtime export",
-      "app1": "asc app1/assembly/index.ts -b app1/build/untouched.wasm -t app1/build/untouched.wat --sourceMap --debug --runtime import --importMemory --relocatable",
-      "app2": "asc app2/assembly/index.ts -b app2/build/untouched.wasm -t app2/build/untouched.wat --sourceMap --debug --runtime import --importMemory --relocatable",  
+      "asr": "asc asr/assembly/index.ts -b asr/build/untouched.wasm -t asr/build/untouched.wat --sourceMap --validate --debug --runtime export --relocatable",
+      "app1": "asc app1/assembly/index.ts -b app1/build/untouched.wasm -t app1/build/untouched.wat --sourceMap --validate --debug --runtime import --importMemory --relocatable",
+      "app2": "asc app2/assembly/index.ts -b app2/build/untouched.wasm -t app2/build/untouched.wat --sourceMap --validate --debug --runtime import --importMemory --relocatable",  
       "asbuild": "npm run asr && npm run app1 && npm run app2"
     }
   }
