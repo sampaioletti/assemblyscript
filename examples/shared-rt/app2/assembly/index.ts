@@ -4,6 +4,8 @@
 declare function log(start:string,len:i32):void
 
 export function addMessage(msg: string):string{
+  let test="app2 global"
+  let some="this is another global from app2"
   let s=String.fromCharCode(66)
   log(s,s.length)
   let resp=msg+s
