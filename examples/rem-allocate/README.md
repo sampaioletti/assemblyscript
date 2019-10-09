@@ -3,6 +3,43 @@
 This example uses a transform (./wrap-strings) to copy strings created in one module
 to another module with a function receiving the string
 
+both modules are simple as the transform does most of the work
+
+```js
+//app1/index.ts
+@external("app2","concat")
+declare function concat(a:string,b:string,repeat:i32):string
+
+export function main():void{
+  let val=concat("a","b",10)
+  log(val)
+}
+
+```
+
+```js
+//app2/index.ts
+export function concat(a:string,b:string,repeat:i32):string{
+  let c:string=""
+  for (let i = 0; i < repeat; i++) {
+    c=c+a.concat(b)
+    
+  }
+  return c
+}
+```
+
+build both modules with asc, the package.json has a helper script
+
+```console
+...wrap-strings>npm run asbuild
+```
+run the index.ts
+
+```console
+...wrap-strings>ts-node index.ts
+...wrap-string>app1 abababababababababab
+```
 Requirements to work:
 
 - Have an @external decorator with both module and function name
