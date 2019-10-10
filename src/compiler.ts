@@ -438,14 +438,14 @@ export class Compiler extends DiagnosticEmitter {
           module.addGlobal(
             BuiltinSymbols.heap_base,
             NativeType.I64,
-            false,
+            true,
             module.i64(i64_low(memoryOffset), i64_high(memoryOffset))
           );
         } else {
           module.addGlobal(
             BuiltinSymbols.heap_base,
             NativeType.I32,
-            false,
+            true,
             module.i32(i64_low(memoryOffset))
           );
         }
@@ -512,15 +512,16 @@ export class Compiler extends DiagnosticEmitter {
       if (file.source.sourceKind == SourceKind.USER_ENTRY) this.ensureModuleExports(file);
     }
 
+    let memorySize = i64_align(memoryOffset, 16);
+    if (options.isWasm64) {
+      module.addGlobal("__memory_size", NativeType.I64, false, module.i64(i64_low(memorySize), i64_high(memorySize)));
+    } else {
+      module.addGlobal("__memory_size", NativeType.I32, false, module.i32(i64_low(memorySize)));
+    }
+    module.addGlobalExport("__memory_size", "__memory_size");
+
     // set up relocation hints
     if (options.relocatable) {
-      let memorySize = i64_align(memoryOffset, 16);
-      if (options.isWasm64) {
-        module.addGlobal("__memory_size", NativeType.I64, false, module.i64(i64_low(memorySize), i64_high(memorySize)));
-      } else {
-        module.addGlobal("__memory_size", NativeType.I32, false, module.i32(i64_low(memorySize)));
-      }
-      module.addGlobalExport("__memory_size", "__memory_size");
       module.addGlobal("__table_size", NativeType.I32, false, module.i32(functionTable.length));
       module.addGlobalExport("__table_size", "__table_size");
       //can't export __rtti_base as it needs to be mutable
