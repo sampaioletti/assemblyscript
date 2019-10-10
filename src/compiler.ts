@@ -355,7 +355,7 @@ export class Compiler extends DiagnosticEmitter {
     var startFunctionBody = new Array<ExpressionRef>();
     this.currentFlow = startFunctionInstance.flow;
     this.currentBody = startFunctionBody;
-
+    
     // add a mutable heap and rtti base dummies
     if (options.isWasm64) {
       module.addGlobal(BuiltinSymbols.heap_base, NativeType.I64, true, module.i64(0));
@@ -382,6 +382,76 @@ export class Compiler extends DiagnosticEmitter {
         this.compileExports(file);
       }
     }
+
+    // compile runtime features needs to be before start function if relocatable
+    // [sp]does this need retained?
+    if (this.runtimeFeatures & RuntimeFeatures.visitGlobals) compileVisitGlobals(this);
+    if (this.runtimeFeatures & RuntimeFeatures.visitMembers) compileVisitMembers(this);
+    if (this.runtimeFeatures & RuntimeFeatures.RTTI) {
+      let offset=compileRTTI(this);
+      if (options.relocatable){
+        if (options.isWasm64){
+          let initExpr=module.i64Ptr(i64_low(offset),i64_high(offset))
+          this.currentBody.push(
+            module.global_set(BuiltinSymbols.rtti_base,initExpr)
+          )
+        }else{
+          let initExpr=module.i32Ptr(i64_low(offset))
+          this.currentBody.push(
+            module.global_set(BuiltinSymbols.rtti_base,initExpr)
+          )
+        }
+
+      }else{
+        module.removeGlobal(BuiltinSymbols.rtti_base);
+        if (options.isWasm64) {
+          module.addGlobal(BuiltinSymbols.rtti_base, NativeType.I64, false, module.i64(i64_low(offset), i64_high(offset)));
+        } else {
+          module.addGlobal(BuiltinSymbols.rtti_base, NativeType.I32, false, module.i32(i64_low(offset)));
+        }
+      }
+    }
+
+    // update the heap base pointer
+    // [sp]: does this need retained?
+    var memoryOffset = this.memoryOffset;
+    memoryOffset = i64_align(memoryOffset, options.usizeType.byteSize);
+    this.memoryOffset = memoryOffset;
+    if(options.relocatable){
+      if (this.runtimeFeatures & RuntimeFeatures.HEAP) {
+        if (options.isWasm64) {
+          let initExpr=module.i64Ptr(i64_low(memoryOffset),i64_high(memoryOffset))
+          this.currentBody.unshift(
+            module.global_set(BuiltinSymbols.heap_base,initExpr)
+          )
+        } else {
+          let initExpr=module.i32Ptr(i64_low(memoryOffset))
+          this.currentBody.unshift(
+            module.global_set(BuiltinSymbols.heap_base,initExpr)
+          )
+        }
+      }
+    }else{
+      module.removeGlobal(BuiltinSymbols.heap_base);
+      if (this.runtimeFeatures & RuntimeFeatures.HEAP) {
+        if (options.isWasm64) {
+          module.addGlobal(
+            BuiltinSymbols.heap_base,
+            NativeType.I64,
+            false,
+            module.i64(i64_low(memoryOffset), i64_high(memoryOffset))
+          );
+        } else {
+          module.addGlobal(
+            BuiltinSymbols.heap_base,
+            NativeType.I32,
+            false,
+            module.i32(i64_low(memoryOffset))
+          );
+        }
+      }
+    }
+    
 
     // compile the start function if not empty or explicitly requested
     var startIsEmpty = !startFunctionBody.length;
@@ -411,35 +481,6 @@ export class Compiler extends DiagnosticEmitter {
       startFunctionInstance.finalize(module, funcRef);
       if (!explicitStart) module.setStart(funcRef);
       else module.addFunctionExport(startFunctionInstance.internalName, "__start");
-    }
-
-    // compile runtime features
-    if (this.runtimeFeatures & RuntimeFeatures.visitGlobals) compileVisitGlobals(this);
-    if (this.runtimeFeatures & RuntimeFeatures.visitMembers) compileVisitMembers(this);
-    module.removeGlobal(BuiltinSymbols.rtti_base);
-    if (this.runtimeFeatures & RuntimeFeatures.RTTI) compileRTTI(this);
-
-    // update the heap base pointer
-    var memoryOffset = this.memoryOffset;
-    memoryOffset = i64_align(memoryOffset, options.usizeType.byteSize);
-    this.memoryOffset = memoryOffset;
-    module.removeGlobal(BuiltinSymbols.heap_base);
-    if (this.runtimeFeatures & RuntimeFeatures.HEAP) {
-      if (options.isWasm64) {
-        module.addGlobal(
-          BuiltinSymbols.heap_base,
-          NativeType.I64,
-          false,
-          module.i64(i64_low(memoryOffset), i64_high(memoryOffset))
-        );
-      } else {
-        module.addGlobal(
-          BuiltinSymbols.heap_base,
-          NativeType.I32,
-          false,
-          module.i32(i64_low(memoryOffset))
-        );
-      }
     }
 
     // set up memory
@@ -482,6 +523,8 @@ export class Compiler extends DiagnosticEmitter {
       module.addGlobalExport("__memory_size", "__memory_size");
       module.addGlobal("__table_size", NativeType.I32, false, module.i32(functionTable.length));
       module.addGlobalExport("__table_size", "__table_size");
+      //can't export __rtti_base as it needs to be mutable
+      module.removeExport("__rtti_base")
     }
 
     return module;
