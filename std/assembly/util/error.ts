@@ -2,7 +2,7 @@
 // and reusing them where possible ensures minimal static data in binaries.
 
 // @ts-ignore: decorator
-@lazy 
+@lazy
 export const E_INDEXOUTOFRANGE: string = "Index out of range";
 
 // @ts-ignore: decorator

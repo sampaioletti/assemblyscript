@@ -4536,7 +4536,7 @@ function typeToRuntimeFlags(type: Type): TypeinfoFlags {
 }
 
 /** Compiles runtime type information for use by stdlib. */
-export function compileRTTI(compiler: Compiler): void {
+export function compileRTTI(compiler: Compiler): I64 {
   var program = compiler.program;
   var module = compiler.module;
   var managedClasses = program.managedClasses;
@@ -4580,12 +4580,7 @@ export function compileRTTI(compiler: Compiler): void {
   assert(off == size);
   var usizeType = program.options.usizeType;
   var segment = compiler.addMemorySegment(data);
-  if (usizeType.size == 8) {
-    let offset = segment.offset;
-    module.addGlobal(BuiltinSymbols.rtti_base, NativeType.I64, false, module.i64Ptr(i64_low(offset), i64_high(offset)));
-  } else {
-    module.addGlobal(BuiltinSymbols.rtti_base, NativeType.I32, false, module.i32Ptr(i64_low(segment.offset)));
-  }
+  return segment.offset
 }
 
 // Helpers
