@@ -368,8 +368,8 @@ export class Compiler extends DiagnosticEmitter {
     // add relocation globals
     if (options.relocatable) {
       let nativeSizeType = options.nativeSizeType;
-      module.addGlobalImport("__memory_base", "env", "memory_base", nativeSizeType, false);
-      module.setMemoryBase("__memory_base");
+      module.addGlobalImport(BuiltinSymbols.memory_base, "env", "memory_base", nativeSizeType, false);
+      module.setMemoryBase(BuiltinSymbols.memory_base);
       module.addGlobalImport("__table_base", "env", "table_base", nativeSizeType, false);
       module.setTableBase("__table_base");
     }
@@ -389,7 +389,7 @@ export class Compiler extends DiagnosticEmitter {
     if (!startIsEmpty || explicitStart) {
       let signature = startFunctionInstance.signature;
       if (!startIsEmpty && explicitStart) {
-        module.addGlobal(BuiltinSymbols.started, NativeType.I32, true, module.i32(0));
+        module.addGlobal(BuiltinSymbols.started, NativeType.I32, true, module.i32Ptr(0));
         startFunctionBody.unshift(
           module.if(
             module.global_get(BuiltinSymbols.started, NativeType.I32),
@@ -1510,10 +1510,10 @@ export class Compiler extends DiagnosticEmitter {
     var ref = i64_add(stringSegment.offset, i64_new(rtHeaderSize));
     this.currentType = stringInstance.type;
     if (this.options.isWasm64) {
-      return this.module.i64(i64_low(ref), i64_high(ref));
+      return this.module.i64Ptr(i64_low(ref), i64_high(ref));
     } else {
       assert(i64_is_u32(ref));
-      return this.module.i32(i64_low(ref));
+      return this.module.i32Ptr(i64_low(ref));
     }
   }
 
@@ -1645,7 +1645,7 @@ export class Compiler extends DiagnosticEmitter {
   }
 
   // === Statements ===============================================================================
-
+ 
   compileTopLevelStatement(statement: Statement, body: ExpressionRef[]): void {
     if (statement.kind == NodeKind.EXPORTDEFAULT) {
       statement = (<ExportDefaultStatement>statement).declaration;
@@ -7607,8 +7607,8 @@ export class Compiler extends DiagnosticEmitter {
         let arrayAddress = i64_add(arraySegment.offset, i64_new(runtimeHeaderSize));
         this.currentType = arrayType;
         return program.options.isWasm64
-          ? this.module.i64(i64_low(arrayAddress), i64_high(arrayAddress))
-          : this.module.i32(i64_low(arrayAddress));
+          ? this.module.i64Ptr(i64_low(arrayAddress), i64_high(arrayAddress))
+          : this.module.i32Ptr(i64_low(arrayAddress));
 
       // otherwise allocate a new array header and make it wrap a copy of the static buffer
       } else {

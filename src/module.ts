@@ -525,6 +525,17 @@ export class Module {
 
   // constants
 
+  i32Ptr(value: i32): ExpressionRef{
+    var out = this.lit;
+    _BinaryenLiteralInt32(out, value);
+    return this.relocMem(_BinaryenConst(this.ref, out));
+  }
+  i64Ptr(valueLow: i32, valueHigh: i32 = 0): ExpressionRef{
+    var out = this.lit;
+    _BinaryenLiteralInt64(out, valueLow, valueHigh);
+    return this.relocMem(_BinaryenConst(this.ref, out));
+  }
+
   i32(value: i32): ExpressionRef {
     var out = this.lit;
     _BinaryenLiteralInt32(out, value);
@@ -618,7 +629,7 @@ export class Module {
     offset: Index = 0,
     align: Index = bytes // naturally aligned by default
   ): ExpressionRef {
-    return _BinaryenLoad(this.ref, bytes, signed ? 1 : 0, offset, align, type, this.relocMem(ptr));
+    return _BinaryenLoad(this.ref, bytes, signed ? 1 : 0, offset, align, type, ptr); //removed reloc
   }
 
   store(
@@ -629,7 +640,8 @@ export class Module {
     offset: Index = 0,
     align: Index = bytes // naturally aligned by default
   ): ExpressionRef {
-    return _BinaryenStore(this.ref, bytes, offset, align, this.relocMem(ptr), value, type);
+  
+    return _BinaryenStore(this.ref, bytes, offset, align, ptr, value, type);
   }
 
   atomic_load(
@@ -638,6 +650,7 @@ export class Module {
     type: NativeType,
     offset: Index = 0
   ): ExpressionRef {
+    console.log("atomic_load")
     return _BinaryenAtomicLoad(this.ref, bytes, offset, type, this.relocMem(ptr));
   }
 
@@ -648,6 +661,7 @@ export class Module {
     type: NativeType,
     offset: Index = 0
   ): ExpressionRef {
+    console.log("atomic_store")
     return _BinaryenAtomicStore(this.ref, bytes, offset, this.relocMem(ptr), value, type);
   }
 

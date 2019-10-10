@@ -499,6 +499,9 @@ export namespace BuiltinSymbols {
   export const visit_globals = "~lib/rt/__visit_globals";
   export const visit_members = "~lib/rt/__visit_members";
 
+  // // relocatable
+  export const memory_base = "~lib/relocatable/__memory_base";
+  
   // std/diagnostics.ts
   export const ERROR = "~lib/diagnostics/ERROR";
   export const WARNING = "~lib/diagnostics/WARNING";
@@ -4579,9 +4582,9 @@ export function compileRTTI(compiler: Compiler): void {
   var segment = compiler.addMemorySegment(data);
   if (usizeType.size == 8) {
     let offset = segment.offset;
-    module.addGlobal(BuiltinSymbols.rtti_base, NativeType.I64, false, module.i64(i64_low(offset), i64_high(offset)));
+    module.addGlobal(BuiltinSymbols.rtti_base, NativeType.I64, false, module.i64Ptr(i64_low(offset), i64_high(offset)));
   } else {
-    module.addGlobal(BuiltinSymbols.rtti_base, NativeType.I32, false, module.i32(i64_low(segment.offset)));
+    module.addGlobal(BuiltinSymbols.rtti_base, NativeType.I32, false, module.i32Ptr(i64_low(segment.offset)));
   }
 }
 

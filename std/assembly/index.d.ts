@@ -116,6 +116,8 @@ declare const NaN: f32 | f64;
 declare const Infinity: f32 | f64;
 /** Heap base offset. */
 declare const __heap_base: usize;
+/** Memory Base Offset when relocatable memory is used  */
+declare const __memory_base: usize;
 /** Determines the byte size of the specified underlying core type. Compiles to a constant. */
 declare function sizeof<T>(): usize;
 /** Determines the alignment (log2) of the specified underlying core type. Compiles to a constant. */
