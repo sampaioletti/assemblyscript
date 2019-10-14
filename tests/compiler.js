@@ -51,7 +51,6 @@ const config = {
 const opts = optionsUtil.parse(process.argv.slice(2), config);
 const args = opts.options;
 const argv = opts.arguments;
-
 if (args.help) {
   console.log([
     colorsUtil.white("SYNTAX"),
@@ -95,11 +94,6 @@ function runTest(basename) {
     ? require(configPath)
     : {};
 
-  const stdout = asc.createMemoryStream();
-  const stderr = asc.createMemoryStream(chunk => process.stderr.write(chunk.toString().replace(/^(?!$)/mg, "  ")));
-  stderr.isTTY = true;
-
-  var asc_flags = [];
   var v8_flags = "";
   var v8_no_flags = "";
   var missing_features = [];
@@ -107,11 +101,6 @@ function runTest(basename) {
     config.features.forEach(feature => {
       if (!features.includes(feature)) missing_features.push(feature);
       var featureConfig = featuresConfig[feature];
-      if (featureConfig.asc_flags) {
-        featureConfig.asc_flags.forEach(flag => {
-          Array.prototype.push.apply(asc_flags, flag.split(" "));
-        });
-      }
       if (featureConfig.v8_flags) {
         featureConfig.v8_flags.forEach(flag => {
           if (v8_flags) v8_flags += " ";
@@ -129,6 +118,108 @@ function runTest(basename) {
       if (cluster.isWorker) process.send({ cmd: "skipped", message: skippedMessages.get(basename) });
       return;
     }
+  }
+  let failed = false
+  let instances=[]//keep all instances around in case other modules need them
+  var modules = compileModules(config, basename)
+  //if modules is not an array we failed=1 or just skip inst =0
+  if (Array.isArray(modules)) {
+    let ranBinaries = []
+    const gluePath = path.join(basedir, basename + ".js");
+    var glue = {};
+    if (fs.existsSync(gluePath)) glue = require(gluePath);
+    modules.some(m => {
+      if (!testInstantiate(m.basename, m.untouchedBuffer, "untouched", glue,instances)) {
+        failed = true;
+        failedTests.add(basename);
+      } else {
+        //add binary to list of ran so it can be deleted if not requiested
+        ranBinaries.push(basename)
+        console.log();
+        if (!testInstantiate(m.basename, m.optimizedBuffer, "optimized", glue,instances)) {
+          failed = true;
+          failedTests.add(basename);
+        }
+      }
+      console.log();
+      return failed //stop running additional modules if failed
+    })
+    ranBinaries.forEach(bName => {
+      if (!args.createBinary) fs.unlink(path.join(basedir, bName + ".untouched.wasm"), err => { });
+    })
+  } else if (modules == 1) {
+    failed = true
+  }
+  if (v8_no_flags) v8.setFlagsFromString(v8_no_flags);
+  if (cluster.isWorker) {
+    //collect module messages
+    let msg
+    if (failed) {
+      let temp = []
+      modules.forEach(m => {
+        temp.push(failedMessages.get(m.basename))
+      })
+      if (temp.length > 0) {
+        msg = temp.join(",")
+      }
+    }
+
+    process.send({ cmd: "done", failed: failed, message: msg });
+  }
+}
+
+// Compile one or more modules
+function compileModules(config, basename) {
+  let result
+  //config main module, i.e. the basename
+  let res = compileModule(config, basename)
+  if (!(res instanceof compiledModule)) {
+    //means we failed
+    return res
+  } else {
+    result = [res]
+  }
+  //compile additional modules
+
+  if (config.children) {
+    config.children.some(m => {
+      let res = compileModule(m, basename)
+      if (!(res instanceof compiledModule)) {
+        //means we failed
+        result = res
+        return true
+      }
+      result.push(res)
+    })
+  }
+  return result
+}
+
+function compiledModule(untouched, optimized, glue) {
+  this.untouchedBuffer = untouched
+  this.optimizedBuffer = optimized
+  this.glue = glue
+  return this
+}
+// compile an individual module returns a new compiiledModule
+function compileModule(config, basename) {
+  if (config.basename) {
+    basename = config.basename
+  }
+  const stdout = asc.createMemoryStream();
+  const stderr = asc.createMemoryStream(chunk => process.stderr.write(chunk.toString().replace(/^(?!$)/mg, "  ")));
+  stderr.isTTY = true;
+
+  var asc_flags = [];
+  if (config.features) {
+    config.features.forEach(feature => {
+      var featureConfig = featuresConfig[feature];
+      if (featureConfig.asc_flags) {
+        featureConfig.asc_flags.forEach(flag => {
+          Array.prototype.push.apply(asc_flags, flag.split(" "));
+        });
+      }
+    });
   }
   if (config.asc_flags) {
     config.asc_flags.forEach(flag => {
@@ -241,33 +332,21 @@ function runTest(basename) {
         failedTests.add(basename);
         return 1;
       }
-      let untouchedBuffer = fs.readFileSync(path.join(basedir, basename + ".untouched.wasm"));
-      let optimizedBuffer = stdout.toBuffer();
-      const gluePath = path.join(basedir, basename + ".js");
-      var glue = {};
-      if (fs.existsSync(gluePath)) glue = require(gluePath);
 
-      if (!testInstantiate(basename, untouchedBuffer, "untouched", glue)) {
-        failed = true;
-        failedTests.add(basename);
-      } else {
-        console.log();
-        if (!testInstantiate(basename, optimizedBuffer, "optimized", glue)) {
-          failed = true;
-          failedTests.add(basename);
-        }
-      }
-      console.log();
-    });
-    if (failed) return 1;
-  });
-  if (v8_no_flags) v8.setFlagsFromString(v8_no_flags);
-  if (!args.createBinary) fs.unlink(path.join(basedir, basename + ".untouched.wasm"), err => {});
-  if (cluster.isWorker) process.send({ cmd: "done", failed: failed, message: failedMessages.get(basename) });
+    })
+    if (failed) return 1
+  })
+  if (failed) {
+    return 1
+  }
+  let untouchedBuffer = fs.readFileSync(path.join(basedir, basename + ".untouched.wasm"));
+  let optimizedBuffer = stdout.toBuffer();
+  return new compiledModule(untouchedBuffer, optimizedBuffer)
 }
 
 // Tests if instantiation of a module succeeds
-function testInstantiate(basename, binaryBuffer, name, glue) {
+function testInstantiate(basename, binaryBuffer, name, glue,instances) {
+  // console.log("inst called")
   var failed = false;
   try {
     let memory = new WebAssembly.Memory({ initial: 10 });
@@ -311,11 +390,13 @@ function testInstantiate(basename, binaryBuffer, name, glue) {
         Date,
         Reflect
       };
+      var module = new WebAssembly.Module(binaryBuffer);
       if (glue.preInstantiate) {
         console.log(colorsUtil.white("  [preInstantiate]"));
-        glue.preInstantiate(imports, exports);
+        glue.preInstantiate(imports, exports, module);
       }
-      var instance = new WebAssembly.Instance(new WebAssembly.Module(binaryBuffer), imports);
+      var instance = new WebAssembly.Instance(module, imports);
+      instances.push(instance)
       Object.setPrototypeOf(exports, instance.exports);
       if (exports.__start) {
         console.log(colorsUtil.white("  [start]"));
@@ -354,8 +435,9 @@ function testInstantiate(basename, binaryBuffer, name, glue) {
     failed = true;
     failedMessages.set(basename, e.message);
   }
-  return false;
+  return failed;
 }
+
 
 // Evaluates the overall test result
 function evaluateResult() {
@@ -442,7 +524,7 @@ if (args.parallel && coreCount > 1) {
     }
   }
 
-// Otherwise run tests sequentially
+  // Otherwise run tests sequentially
 } else {
   getTests().forEach(runTest);
   evaluateResult();

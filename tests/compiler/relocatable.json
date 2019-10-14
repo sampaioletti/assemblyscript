@@ -1,6 +1,14 @@
 {
   "asc_flags": [
+<<<<<<< HEAD
     "--relocatable",
     "--importMemory"
+=======
+    "--runtime none",
+    "--explicitStart",
+    "--importMemory",
+    "--importTable",
+    "--relocatable"
+>>>>>>> multi-module-compiler-tests
   ]
 }
