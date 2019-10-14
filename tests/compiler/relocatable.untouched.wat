@@ -1,13 +1,13 @@
 (module
  (type $FUNCSIG$i (func (result i32)))
- (type $FUNCSIG$viiii (func (param i32 i32 i32 i32)))
  (type $FUNCSIG$iii (func (param i32 i32) (result i32)))
  (type $FUNCSIG$ii (func (param i32) (result i32)))
  (type $FUNCSIG$vi (func (param i32)))
  (type $FUNCSIG$iiiiii (func (param i32 i32 i32 i32 i32) (result i32)))
+ (type $FUNCSIG$viiii (func (param i32 i32 i32 i32)))
  (type $FUNCSIG$v (func))
  (import "env" "memory" (memory $0 1))
- (data (global.get $__memory_base) "\00\00\00\00\00\00\00\00\04\00\00\00\01\00\00\00\01\00\00\00\04\00\00\004\002\00\00\00\00\00\04\00\00\00\01\00\00\00\00\00\00\00\04\00\00\00*\00\00\00\00\00\00\00\10\00\00\00\01\00\00\00\03\00\00\00\10\00\00\000\00\00\000\00\00\00\04\00\00\00\01\00\00\00\1c\00\00\00\01\00\00\00\01\00\00\00\1c\00\00\00r\00e\00l\00o\00c\00a\00t\00a\00b\00l\00e\00.\00t\00s\00\00\00\00\00$\00\00\00\01\00\00\00\01\00\00\00$\00\00\00I\00n\00d\00e\00x\00 \00o\00u\00t\00 \00o\00f\00 \00r\00a\00n\00g\00e\00\00\00\00\00\1a\00\00\00\01\00\00\00\01\00\00\00\1a\00\00\00~\00l\00i\00b\00/\00a\00r\00r\00a\00y\00.\00t\00s\00\00\00\00\00\00\00\04\00\00\00\01\00\00\00\00\00\00\00\04\00\00\00+\00\00\00\00\00\00\00\10\00\00\00\01\00\00\00\03\00\00\00\10\00\00\00\00\01\00\00\00\01\00\00\04\00\00\00\01\00\00\00")
+ (data (global.get $__memory_base) "\00\00\00\00\00\00\00\00\04\00\00\00\01\00\00\00\01\00\00\00\04\00\00\004\002\00\00\00\00\00\04\00\00\00\01\00\00\00\00\00\00\00\04\00\00\00*\00\00\00\00\00\00\00\10\00\00\00\01\00\00\00\03\00\00\00\10\00\00\000\00\00\000\00\00\00\04\00\00\00\01\00\00\00\1c\00\00\00\01\00\00\00\01\00\00\00\1c\00\00\00r\00e\00l\00o\00c\00a\00t\00a\00b\00l\00e\00.\00t\00s\00\00\00\00\00$\00\00\00\01\00\00\00\01\00\00\00$\00\00\00I\00n\00d\00e\00x\00 \00o\00u\00t\00 \00o\00f\00 \00r\00a\00n\00g\00e\00\00\00\00\00\1a\00\00\00\01\00\00\00\01\00\00\00\1a\00\00\00~\00l\00i\00b\00/\00a\00r\00r\00a\00y\00.\00t\00s\00\00\00\00\00\00\00\04\00\00\00\01\00\00\00\00\00\00\00\04\00\00\00+\00\00\00\00\00\00\00\10\00\00\00\01\00\00\00\03\00\00\00\10\00\00\00\00\01\00\00\00\01\00\00\04\00\00\00\01\00\00\00\n\00\00\00\01\00\00\00\01\00\00\00\n\00\00\00h\00e\00l\00l\00o\00")
  (import "env" "table" (table $0 2 funcref))
  (elem (global.get $__table_base) $null $start:relocatable~anonymous|0)
  (import "env" "memory_base" (global $__memory_base i32))
@@ -15,6 +15,9 @@
  (import "env" "memory_base" (global $relocatable/__memory_base i32))
  (import "env" "table_base" (global $relocatable/__table_base i32))
  (import "env" "abort" (func $~lib/builtins/abort (param i32 i32 i32 i32)))
+ (import "env" "offset" (func $relocatable/offset<~lib/string/String> (param i32)))
+ (import "env" "offset" (func $relocatable/offset<usize> (param i32)))
+ (import "peer" "sayHello" (func $relocatable/peerHello (param i32)))
  (global $relocatable/staticString i32 (i32.const 24))
  (global $relocatable/staticArray i32 (i32.const 72))
  (global $relocatable/staticFunction i32 (i32.const 1))
@@ -22,22 +25,26 @@
  (global $~lib/argc (mut i32) (i32.const 0))
  (global $relocatable/normalArray (mut i32) (i32.const 280))
  (global $~lib/started (mut i32) (i32.const 0))
- (global $__memory_size i32 (i32.const 304))
+ (global $__memory_size i32 (i32.const 336))
  (global $__table_size i32 (i32.const 2))
  (export "__start" (func $start))
  (export "memory" (memory $0))
+ (export "__memory_base" (global $relocatable/__memory_base))
+ (export "__table_base" (global $relocatable/__table_base))
+ (export "main" (func $relocatable/main))
+ (export "sayHello" (func $relocatable/sayHello))
  (export "__memory_size" (global $__memory_size))
  (export "__table_size" (global $__table_size))
- (func $start:relocatable~anonymous|0 (; 1 ;) (type $FUNCSIG$i) (result i32)
+ (func $start:relocatable~anonymous|0 (; 4 ;) (type $FUNCSIG$i) (result i32)
   i32.const 42
  )
- (func $~lib/rt/stub/__retain (; 2 ;) (type $FUNCSIG$ii) (param $0 i32) (result i32)
+ (func $~lib/rt/stub/__retain (; 5 ;) (type $FUNCSIG$ii) (param $0 i32) (result i32)
   local.get $0
  )
- (func $~lib/rt/stub/__release (; 3 ;) (type $FUNCSIG$vi) (param $0 i32)
+ (func $~lib/rt/stub/__release (; 6 ;) (type $FUNCSIG$vi) (param $0 i32)
   nop
  )
- (func $~lib/string/String#get:length (; 4 ;) (type $FUNCSIG$ii) (param $0 i32) (result i32)
+ (func $~lib/string/String#get:length (; 7 ;) (type $FUNCSIG$ii) (param $0 i32) (result i32)
   global.get $__memory_base
   local.get $0
   i32.const 16
@@ -47,7 +54,7 @@
   i32.const 1
   i32.shr_u
  )
- (func $~lib/util/string/compareImpl (; 5 ;) (type $FUNCSIG$iiiiii) (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32) (param $4 i32) (result i32)
+ (func $~lib/util/string/compareImpl (; 8 ;) (type $FUNCSIG$iiiiii) (param $0 i32) (param $1 i32) (param $2 i32) (param $3 i32) (param $4 i32) (result i32)
   (local $5 i32)
   (local $6 i32)
   (local $7 i32)
@@ -175,7 +182,7 @@
   call $~lib/rt/stub/__release
   local.get $8
  )
- (func $~lib/string/String.__eq (; 6 ;) (type $FUNCSIG$iii) (param $0 i32) (param $1 i32) (result i32)
+ (func $~lib/string/String.__eq (; 9 ;) (type $FUNCSIG$iii) (param $0 i32) (param $1 i32) (result i32)
   (local $2 i32)
   (local $3 i32)
   local.get $0
@@ -248,7 +255,7 @@
   call $~lib/rt/stub/__release
   local.get $2
  )
- (func $~lib/array/Array<i32>#__unchecked_get (; 7 ;) (type $FUNCSIG$iii) (param $0 i32) (param $1 i32) (result i32)
+ (func $~lib/array/Array<i32>#__unchecked_get (; 10 ;) (type $FUNCSIG$iii) (param $0 i32) (param $1 i32) (result i32)
   global.get $__memory_base
   global.get $__memory_base
   local.get $0
@@ -261,7 +268,7 @@
   i32.add
   i32.load
  )
- (func $~lib/array/Array<i32>#__get (; 8 ;) (type $FUNCSIG$iii) (param $0 i32) (param $1 i32) (result i32)
+ (func $~lib/array/Array<i32>#__get (; 11 ;) (type $FUNCSIG$iii) (param $0 i32) (param $1 i32) (result i32)
   (local $2 i32)
   local.get $1
   global.get $__memory_base
@@ -283,45 +290,9 @@
   local.set $2
   local.get $2
  )
- (func $start:relocatable (; 9 ;) (type $FUNCSIG$v)
+ (func $start:relocatable (; 12 ;) (type $FUNCSIG$v)
   (local $0 i32)
   (local $1 i32)
-  i32.const 24
-  global.get $relocatable/__memory_base
-  i32.lt_u
-  i32.eqz
-  if
-   i32.const 0
-   i32.const 104
-   i32.const 11
-   i32.const 0
-   call $~lib/builtins/abort
-   unreachable
-  end
-  i32.const 72
-  global.get $relocatable/__memory_base
-  i32.lt_u
-  i32.eqz
-  if
-   i32.const 0
-   i32.const 104
-   i32.const 12
-   i32.const 0
-   call $~lib/builtins/abort
-   unreachable
-  end
-  i32.const 1
-  global.get $relocatable/__table_base
-  i32.lt_u
-  i32.eqz
-  if
-   i32.const 0
-   i32.const 104
-   i32.const 13
-   i32.const 0
-   call $~lib/builtins/abort
-   unreachable
-  end
   i32.const 24
   i32.const 24
   call $~lib/string/String.__eq
@@ -329,7 +300,7 @@
   if
    i32.const 0
    i32.const 104
-   i32.const 15
+   i32.const 21
    i32.const 0
    call $~lib/builtins/abort
    unreachable
@@ -343,7 +314,7 @@
   if
    i32.const 0
    i32.const 104
-   i32.const 16
+   i32.const 22
    i32.const 0
    call $~lib/builtins/abort
    unreachable
@@ -360,7 +331,7 @@
   if
    i32.const 0
    i32.const 104
-   i32.const 17
+   i32.const 23
    i32.const 0
    call $~lib/builtins/abort
    unreachable
@@ -374,13 +345,62 @@
   if
    i32.const 0
    i32.const 104
-   i32.const 20
+   i32.const 26
    i32.const 0
    call $~lib/builtins/abort
    unreachable
   end
  )
- (func $start (; 10 ;) (type $FUNCSIG$v)
+ (func $relocatable/main (; 13 ;) (type $FUNCSIG$v)
+  (local $0 i32)
+  i32.const 312
+  call $~lib/rt/stub/__retain
+  local.set $0
+  local.get $0
+  call $relocatable/offset<~lib/string/String>
+  global.get $relocatable/__memory_base
+  call $relocatable/offset<usize>
+  local.get $0
+  call $relocatable/peerHello
+  local.get $0
+  call $~lib/rt/stub/__release
+ )
+ (func $relocatable/sayHello (; 14 ;) (type $FUNCSIG$vi) (param $0 i32)
+  local.get $0
+  call $~lib/rt/stub/__retain
+  drop
+  local.get $0
+  call $relocatable/offset<~lib/string/String>
+  global.get $relocatable/__memory_base
+  call $relocatable/offset<usize>
+  local.get $0
+  global.get $relocatable/__memory_base
+  i32.lt_u
+  i32.eqz
+  if
+   i32.const 0
+   i32.const 104
+   i32.const 37
+   i32.const 4
+   call $~lib/builtins/abort
+   unreachable
+  end
+  local.get $0
+  i32.const 312
+  call $~lib/string/String.__eq
+  i32.eqz
+  if
+   i32.const 0
+   i32.const 104
+   i32.const 38
+   i32.const 4
+   call $~lib/builtins/abort
+   unreachable
+  end
+  local.get $0
+  call $~lib/rt/stub/__release
+ )
+ (func $start (; 15 ;) (type $FUNCSIG$v)
   global.get $~lib/started
   if
    return
@@ -390,6 +410,6 @@
   end
   call $start:relocatable
  )
- (func $null (; 11 ;) (type $FUNCSIG$v)
+ (func $null (; 16 ;) (type $FUNCSIG$v)
  )
 )
